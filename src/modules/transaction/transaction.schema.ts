@@ -23,7 +23,14 @@ export class Transaction {
   })
   stage!: string;
 
+  // 💥 FIX BURASI
   @Prop({
+    type: {
+      total: Number,
+      agency: Number,
+      listingAgent: Number,
+      sellingAgent: Number,
+    },
     default: null,
   })
   commission!: {
