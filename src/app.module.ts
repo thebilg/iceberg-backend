@@ -6,6 +6,7 @@ import { PropertyModule } from './modules/property/property.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { AgentModule } from './modules/agent/agent.module';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
