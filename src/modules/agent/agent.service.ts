@@ -6,8 +6,7 @@ import { Agent, AgentDocument } from './agent.schema';
 @Injectable()
 export class AgentService {
   constructor(
-    @InjectModel(Agent.name)
-    private agentModel: Model<AgentDocument>,
+    @InjectModel(Agent.name) private agentModel: Model<AgentDocument>,
   ) {}
 
   async create(data: any) {
@@ -15,18 +14,20 @@ export class AgentService {
   }
 
   async findAll() {
-    return this.agentModel.find();
+    return this.agentModel.find().exec();
   }
 
   async findOne(id: string) {
-    return this.agentModel.findById(id);
+    return this.agentModel.findById(id).exec();
   }
 
-  async addEarning(id: string, amount: number) {
-    return this.agentModel.findByIdAndUpdate(
-      id,
-      { $inc: { totalEarnings: amount } },
-      { new: true },
-    );
+  async addEarning(agentId: string, amount: number) {
+    const agent = await this.agentModel.findById(agentId);
+    if (!agent) {
+      throw new Error('Agent not found');
+    }
+    agent.totalEarnings += amount;
+    await agent.save();
+    return agent;
   }
 }

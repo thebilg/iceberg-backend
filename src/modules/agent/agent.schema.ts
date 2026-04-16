@@ -11,6 +11,9 @@ export class Agent {
   @Prop({ required: true, unique: true })
   email!: string;
 
+  @Prop({ required: true })
+  phone!: string;
+
   @Prop({ default: 0 })
   totalEarnings!: number;
 }
