@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type PropertyDocument = Property & Document;
 
@@ -19,6 +19,9 @@ export class Property {
     enum: ['available', 'in_transaction', 'sold'],
   })
   status!: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Agent', required: true })
+  listedBy!: Types.ObjectId;
 }
 
 export const PropertySchema = SchemaFactory.createForClass(Property);

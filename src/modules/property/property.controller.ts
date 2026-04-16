@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { PropertyService } from './property.service';
+import { CreatePropertyDto } from './dto/create-property.dto';
 
 @Controller('properties')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
   @Post()
-  create(@Body() body: any) {
-    return this.propertyService.create(body);
+  create(@Body() createPropertyDto: CreatePropertyDto) {
+    return this.propertyService.create(createPropertyDto);
   }
 
   @Get()

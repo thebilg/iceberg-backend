@@ -1,20 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Transaction, TransactionDocument } from './transaction.schema';
 import { AgentService } from '../agent/agent.service';
+import { PropertyService } from '../property/property.service';
 
 @Injectable()
 export class TransactionService {
   constructor(
     @InjectModel(Transaction.name)
     private transactionModel: Model<TransactionDocument>,
-
     private agentService: AgentService,
+    private propertyService: PropertyService,
   ) {}
+
+  private assertValidObjectId(value: unknown, field: string) {
+    if (!value || !Types.ObjectId.isValid(String(value))) {
+      throw new BadRequestException(`${field} must be a valid ObjectId`);
+    }
+  }
+
+  private async assertPropertyExists(id: string) {
+    const property = await this.propertyService.findOne(id);
+    if (!property) {
+      throw new NotFoundException(`Property not found: ${id}`);
+    }
+  }
+
+  private async assertAgentExists(id: string, field: string) {
+    const agent = await this.agentService.findOne(id);
+    if (!agent) {
+      throw new NotFoundException(`${field} not found: ${id}`);
+    }
+  }
 
   // ➕ TRANSACTION OLUŞTUR
   async create(data: any) {
+    this.assertValidObjectId(data.propertyId, 'propertyId');
+    this.assertValidObjectId(data.listingAgentId, 'listingAgentId');
+    this.assertValidObjectId(data.sellingAgentId, 'sellingAgentId');
+
+    await this.assertPropertyExists(data.propertyId);
+    await this.assertAgentExists(data.listingAgentId, 'listingAgentId');
+    await this.assertAgentExists(data.sellingAgentId, 'sellingAgentId');
+
     const commission = this.calculateCommission(
       data.price,
       data.listingAgentId,
