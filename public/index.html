@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iceberg Yonetim</title>
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --panel: rgba(255, 252, 246, 0.88);
+      --ink: #1f2a1f;
+      --muted: #596357;
+      --line: rgba(31, 42, 31, 0.12);
+      --accent: #204f3d;
+      --danger: #9f2d2d;
+      --danger-soft: #fce7e7;
+      --shadow: 0 18px 50px rgba(32, 79, 61, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(32, 79, 61, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(180, 126, 75, 0.15), transparent 24%),
+        linear-gradient(180deg, #f7f3ec 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 56px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      max-width: 8ch;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 52ch;
+      line-height: 1.5;
+      font-size: 1rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .refresh {
+      background: var(--accent);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+    }
+
+    .status {
+      margin: 0 0 18px;
+      min-height: 24px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      min-height: 420px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: 0.02em;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.68);
+      align-items: start;
+    }
+
+    .item-title {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .delete {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: transform 140ms ease, background 140ms ease;
+    }
+
+    .delete:hover {
+      transform: scale(1.06);
+      background: #f8d7d7;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: min(100% - 20px, 100%);
+        padding-top: 24px;
+      }
+
+      .hero {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .delete {
+        justify-self: end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <h1>Kayit Yonetimi</h1>
+        <p class="subtitle">Danismanlari, evleri ve satis kayitlarini tek ekrandan gor. Her kartin sagindaki x butonu dogrudan ilgili kaydi siler.</p>
+      </div>
+      <div class="toolbar">
+        <button class="refresh" id="refreshButton" type="button">Listeyi yenile</button>
+      </div>
+    </section>
+
+    <p class="status" id="statusText">Veriler yukleniyor...</p>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Danismanlar</h2>
+          <span class="count" id="agentsCount">0 kayit</span>
+        </div>
+        <div class="list" id="agentsList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Evler</h2>
+          <span class="count" id="propertiesCount">0 kayit</span>
+        </div>
+        <div class="list" id="propertiesList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Satislar</h2>
+          <span class="count" id="transactionsCount">0 kayit</span>
+        </div>
+        <div class="list" id="transactionsList"></div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const resources = {
+      agents: {
+        endpoint: '/agents',
+        listId: 'agentsList',
+        countId: 'agentsCount',
+        title: (item) => item.name || 'Isimsiz danisman',
+        meta: (item) => [
+          item.email || 'E-posta yok',
+          item.phone || 'Telefon yok',
+          `Kazanc: ${formatMoney(item.totalEarnings || 0)}`,
+          item.id || item._id || '',
+        ],
+      },
+      properties: {
+        endpoint: '/properties',
+        listId: 'propertiesList',
+        countId: 'propertiesCount',
+        title: (item) => item.title || 'Basliksiz ilan',
+        meta: (item) => [
+          item.city || 'Sehir yok',
+          `Fiyat: ${formatMoney(item.price || 0)}`,
+          `Danisman: ${item.listedBy?.name || item.listedBy?._id || 'Bilinmiyor'}`,
+          item.id || item._id || '',
+        ],
+      },
+      transactions: {
+        endpoint: '/transactions',
+        listId: 'transactionsList',
+        countId: 'transactionsCount',
+        title: (item) => item.propertyId?.title || 'Satis kaydi',
+        meta: (item) => [
+          `Fiyat: ${formatMoney(item.price || 0)}`,
+          `Asama: ${item.stage || 'Bilinmiyor'}`,
+          `Listeleyen: ${item.listingAgentId?.name || 'Bilinmiyor'}`,
+          `Satan: ${item.sellingAgentId?.name || 'Bilinmiyor'}`,
+          item.id || item._id || '',
+        ],
+      },
+    };
+
+    const statusText = document.getElementById('statusText');
+    const refreshButton = document.getElementById('refreshButton');
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+        maximumFractionDigits: 0,
+      }).format(Number(value) || 0);
+    }
+
+    function setStatus(message, isError = false) {
+      statusText.textContent = message;
+      statusText.style.color = isError ? '#9f2d2d' : '#596357';
+    }
+
+    function renderEmpty(container) {
+      container.innerHTML = '<div class="empty">Kayit bulunmuyor.</div>';
+    }
+
+    function createDeleteButton(type, id, label) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'delete';
+      button.textContent = 'x';
+      button.setAttribute('aria-label', `${label} sil`);
+      button.addEventListener('click', async () => {
+        const confirmed = window.confirm(`${label} kaydini silmek istiyor musun?`);
+
+        if (!confirmed) {
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = '...';
+
+        try {
+          const response = await fetch(`${resources[type].endpoint}/${id}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            throw new Error(`${label} silinemedi`);
+          }
+
+          setStatus(`${label} silindi.`);
+          await loadResource(type);
+        } catch (error) {
+          setStatus(error.message || 'Silme islemi basarisiz oldu.', true);
+          button.disabled = false;
+          button.textContent = 'x';
+        }
+      });
+      return button;
+    }
+
+    function renderResource(type, items) {
+      const config = resources[type];
+      const list = document.getElementById(config.listId);
+      const count = document.getElementById(config.countId);
+
+      count.textContent = `${items.length} kayit`;
+      list.innerHTML = '';
+
+      if (!items.length) {
+        renderEmpty(list);
+        return;
+      }
+
+      for (const item of items) {
+        const card = document.createElement('div');
+        card.className = 'item';
+
+        const content = document.createElement('div');
+
+        const title = document.createElement('p');
+        title.className = 'item-title';
+        title.textContent = config.title(item);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        for (const line of config.meta(item).filter(Boolean)) {
+          const row = document.createElement('span');
+          row.textContent = line;
+          meta.appendChild(row);
+        }
+
+        content.appendChild(title);
+        content.appendChild(meta);
+
+        card.appendChild(content);
+        card.appendChild(createDeleteButton(type, item.id || item._id, config.title(item)));
+        list.appendChild(card);
+      }
+    }
+
+    async function loadResource(type) {
+      const config = resources[type];
+      const response = await fetch(config.endpoint);
+
+      if (!response.ok) {
+        throw new Error(`${type} verileri alinamadi`);
+      }
+
+      const items = await response.json();
+      renderResource(type, Array.isArray(items) ? items : []);
+    }
+
+    async function loadAll() {
+      setStatus('Veriler yukleniyor...');
+
+      try {
+        await Promise.all([
+          loadResource('agents'),
+          loadResource('properties'),
+          loadResource('transactions'),
+        ]);
+        setStatus('Listeler guncel.');
+      } catch (error) {
+        setStatus(error.message || 'Veriler yuklenemedi.', true);
+      }
+    }
+
+    refreshButton.addEventListener('click', loadAll);
+    loadAll();
+  </script>
+</body>
+</html>

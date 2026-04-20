@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 
-@Controller('transactions')
+@Controller(['transactions', 'transaction', 'api/transactions', 'api/transaction'])
 export class TransactionController {
   constructor(private readonly service: TransactionService) {}
 
@@ -30,5 +30,10 @@ export class TransactionController {
     @Body('stage') stage: string,
   ) {
     return this.service.updateStage(id, stage);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 }

@@ -31,4 +31,18 @@ export class PropertyService {
   async findOne(id: string) {
     return this.propertyModel.findById(id).populate('listedBy', 'name').exec();
   }
+
+  async remove(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid property id');
+    }
+
+    const deletedProperty = await this.propertyModel.findByIdAndDelete(id).exec();
+
+    if (!deletedProperty) {
+      throw new NotFoundException('Property not found');
+    }
+
+    return deletedProperty;
+  }
 }

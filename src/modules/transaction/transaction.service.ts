@@ -74,6 +74,22 @@ export class TransactionService {
       .populate('sellingAgentId');
   }
 
+  async remove(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid transaction id');
+    }
+
+    const deletedTransaction = await this.transactionModel
+      .findByIdAndDelete(id)
+      .exec();
+
+    if (!deletedTransaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    return deletedTransaction;
+  }
+
   // 🔁 STAGE GÜNCELLEME
   async updateStage(id: string, nextStage: string) {
     const transaction = await this.transactionModel.findById(id);

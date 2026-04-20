@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { AgentService } from './agent.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 
-@Controller('agents')
+@Controller(['agents', 'agent', 'api/agents', 'api/agent'])
 export class AgentController {
   constructor(private readonly service: AgentService) {}
 
@@ -19,5 +19,10 @@ export class AgentController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 }

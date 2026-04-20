@@ -19,3 +19,13 @@ export class Agent {
 }
 
 export const AgentSchema = SchemaFactory.createForClass(Agent);
+
+AgentSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_doc, ret) => {
+    const serialized = ret as typeof ret & { id: string };
+    serialized.id = String(ret._id);
+    return ret;
+  },
+});
