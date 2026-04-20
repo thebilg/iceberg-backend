@@ -34,6 +34,90 @@ export class TransactionService {
     }
   }
 
+  private getRefId(
+    value: Types.ObjectId | { _id?: Types.ObjectId | string } | string | null | undefined,
+    field: string,
+  ) {
+    if (!value) {
+      throw new BadRequestException(`${field} is required`);
+    }
+
+    if (typeof value === 'string') {
+      this.assertValidObjectId(value, field);
+      return value;
+    }
+
+    if (value instanceof Types.ObjectId) {
+      return value.toString();
+    }
+
+    if (value._id) {
+      const id = String(value._id);
+      this.assertValidObjectId(id, field);
+      return id;
+    }
+
+    throw new BadRequestException(`${field} must be a valid ObjectId`);
+  }
+
+  private async assertCompletionDependencies(transaction: TransactionDocument) {
+    const propertyId = this.getRefId(transaction.propertyId, 'propertyId');
+    const listingAgentId = this.getRefId(
+      transaction.listingAgentId,
+      'listingAgentId',
+    );
+    const sellingAgentId = this.getRefId(
+      transaction.sellingAgentId,
+      'sellingAgentId',
+    );
+
+    await Promise.all([
+      this.assertPropertyExists(propertyId),
+      this.assertAgentExists(listingAgentId, 'listingAgentId'),
+      this.assertAgentExists(sellingAgentId, 'sellingAgentId'),
+    ]);
+
+    return {
+      propertyId,
+      listingAgentId,
+      sellingAgentId,
+    };
+  }
+
+  private normalizeStage(stage: unknown) {
+    if (typeof stage !== 'string' || !stage.trim()) {
+      throw new BadRequestException('Stage is required');
+    }
+
+    const normalized = stage
+      .trim()
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ş/g, 's')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c');
+
+    const aliases: Record<string, string> = {
+      agreement: 'agreement',
+      anlasma: 'agreement',
+      anlasma_imzalandi: 'agreement',
+      earnest_money: 'earnest_money',
+      kapora: 'earnest_money',
+      kapora_alindi: 'earnest_money',
+      title_deed: 'title_deed',
+      tapu: 'title_deed',
+      tapuda: 'title_deed',
+      completed: 'completed',
+      tamamlandi: 'completed',
+      tamamlandi_olarak_isaretle: 'completed',
+      complete: 'completed',
+    };
+
+    return aliases[normalized] ?? normalized;
+  }
+
   // ➕ TRANSACTION OLUŞTUR
   async create(data: any) {
     this.assertValidObjectId(data.propertyId, 'propertyId');
@@ -91,11 +175,13 @@ export class TransactionService {
   }
 
   // 🔁 STAGE GÜNCELLEME
-  async updateStage(id: string, nextStage: string) {
+  async updateStage(id: string, nextStage: unknown) {
+    this.assertValidObjectId(id, 'transaction id');
+
     const transaction = await this.transactionModel.findById(id);
 
     if (!transaction) {
-      throw new Error('Transaction not found');
+      throw new NotFoundException('Transaction not found');
     }
 
     const order = [
@@ -105,31 +191,58 @@ export class TransactionService {
       'completed',
     ];
 
+    const normalizedNextStage = this.normalizeStage(nextStage);
+
     const currentIndex = order.indexOf(transaction.stage);
-    const nextIndex = order.indexOf(nextStage);
+    const nextIndex = order.indexOf(normalizedNextStage);
+
+    if (nextIndex === -1) {
+      throw new BadRequestException('Invalid stage value');
+    }
 
     if (nextIndex !== currentIndex + 1) {
-      throw new Error('Invalid stage transition');
+      throw new BadRequestException('Invalid stage transition');
     }
 
-    transaction.stage = nextStage;
+    const refs = await this.assertCompletionDependencies(transaction);
 
-      if (nextStage === 'completed') {
-    const commission = transaction.commission;
+    transaction.stage = normalizedNextStage;
 
-    if (commission) {
-      await this.agentService.addEarning(
-        transaction.listingAgentId.toString(),
-        commission.listingAgent,
-      );
-
-      await this.agentService.addEarning(
-        transaction.sellingAgentId.toString(),
-        commission.sellingAgent,
+    if (normalizedNextStage === 'earnest_money' || normalizedNextStage === 'title_deed') {
+      await this.propertyService.updateStatus(
+        refs.propertyId,
+        'in_transaction',
       );
     }
-  }
 
+    if (normalizedNextStage === 'completed') {
+      const commission =
+        transaction.commission ??
+        this.calculateCommission(
+          transaction.price,
+          refs.listingAgentId,
+          refs.sellingAgentId,
+        );
+
+      transaction.commission = commission;
+
+      await this.propertyService.updateStatus(
+        refs.propertyId,
+        'sold',
+      );
+
+      if (commission) {
+        await this.agentService.addEarning(
+          refs.listingAgentId,
+          commission.listingAgent,
+        );
+
+        await this.agentService.addEarning(
+          refs.sellingAgentId,
+          commission.sellingAgent,
+        );
+      }
+    }
 
     return transaction.save();
   }

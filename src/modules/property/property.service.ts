@@ -32,6 +32,23 @@ export class PropertyService {
     return this.propertyModel.findById(id).populate('listedBy', 'name').exec();
   }
 
+  async updateStatus(id: string, status: 'available' | 'in_transaction' | 'sold') {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid property id');
+    }
+
+    const property = await this.propertyModel.findById(id).exec();
+
+    if (!property) {
+      throw new NotFoundException('Property not found');
+    }
+
+    property.status = status;
+    await property.save();
+
+    return property;
+  }
+
   async remove(id: string) {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid property id');

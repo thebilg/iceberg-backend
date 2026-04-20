@@ -27,9 +27,12 @@ export class TransactionController {
   @Patch(':id/stage')
   updateStage(
     @Param('id') id: string,
-    @Body('stage') stage: string,
+    @Body() body: { stage?: string; nextStage?: string; status?: string },
   ) {
-    return this.service.updateStage(id, stage);
+    return this.service.updateStage(
+      id,
+      body.stage ?? body.nextStage ?? body.status,
+    );
   }
 
   @Delete(':id')

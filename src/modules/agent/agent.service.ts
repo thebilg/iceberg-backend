@@ -36,12 +36,22 @@ export class AgentService {
   }
 
   async addEarning(agentId: string, amount: number) {
-    const agent = await this.agentModel.findById(agentId);
-    if (!agent) {
-      throw new Error('Agent not found');
+    if (!Types.ObjectId.isValid(agentId)) {
+      throw new BadRequestException('Invalid agent id');
     }
-    agent.totalEarnings += amount;
-    await agent.save();
+
+    const agent = await this.agentModel
+      .findByIdAndUpdate(
+        agentId,
+        { $inc: { totalEarnings: amount } },
+        { new: true },
+      )
+      .exec();
+
+    if (!agent) {
+      throw new NotFoundException('Agent not found');
+    }
+
     return agent;
   }
 }
