@@ -23,7 +23,6 @@ export class Transaction {
   })
   stage!: string;
 
-  // 💥 FIX BURASI
   @Prop({
     type: {
       total: Number,

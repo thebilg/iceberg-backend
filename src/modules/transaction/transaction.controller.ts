@@ -7,25 +7,21 @@ import { UpdateTransactionStageDto } from './dto/update-transaction-stage.dto';
 export class TransactionController {
   constructor(private readonly service: TransactionService) {}
 
-  // ➕ TRANSACTION OLUŞTUR
   @Post()
   create(@Body() body: CreateTransactionDto) {
     return this.service.create(body);
   }
 
-  // 📋 TÜM TRANSACTIONS
   @Get()
   findAll() {
     return this.service.findAll();
   }
 
-  // 🔍 TEK TRANSACTION
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
-  // 🔁 STAGE GÜNCELLEME (YENİ EKLENEN KISIM)
   @Patch(':id/stage')
   updateStage(
     @Param('id') id: string,

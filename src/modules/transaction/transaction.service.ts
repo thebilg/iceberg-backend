@@ -119,7 +119,6 @@ export class TransactionService {
     return aliases[normalized] ?? normalized;
   }
 
-  // ➕ TRANSACTION OLUŞTUR
   async create(data: CreateTransactionDto) {
     this.assertValidObjectId(data.propertyId, 'propertyId');
     this.assertValidObjectId(data.listingAgentId, 'listingAgentId');
@@ -141,7 +140,6 @@ export class TransactionService {
     });
   }
 
-  // 📋 TÜM TRANSACTIONS
   async findAll() {
     return this.transactionModel
       .find()
@@ -150,7 +148,6 @@ export class TransactionService {
       .populate('sellingAgentId');
   }
 
-  // 🔍 TEK TRANSACTION
   async findOne(id: string) {
     return this.transactionModel
       .findById(id)
@@ -175,7 +172,6 @@ export class TransactionService {
     return deletedTransaction;
   }
 
-  // 🔁 STAGE GÜNCELLEME
   async updateStage(id: string, nextStage: unknown) {
     this.assertValidObjectId(id, 'transaction id');
 
@@ -248,7 +244,6 @@ export class TransactionService {
     return transaction.save();
   }
 
-  // 💰 COMMISSION HESAPLAMA
   calculateCommission(
     price: number,
     listingId: string,
