@@ -6,10 +6,9 @@ This document describes the architectural decisions and design approach for the 
 
 The system is designed to manage real estate transactions, automate commission distribution, and provide full visibility into the transaction lifecycle.
 
-The application consists of two main parts:
+The overall solution consists of a Nuxt 3 frontend and a NestJS + MongoDB Atlas backend.
 
-* A Nuxt 3 frontend application
-* A NestJS + MongoDB Atlas backend
+This repository contains the backend implementation. Frontend references in this document describe the intended integration contract so the backend API and data model stay aligned with the full case requirements.
 
 The goal of this document is not only to describe the current implementation, but also to clearly explain the reasoning behind key design decisions across the entire system.
 
@@ -62,14 +61,11 @@ The backend follows a domain-based modular structure:
 * `AgentsModule`
 * `PropertiesModule`
 * `TransactionsModule`
-* `ReportsModule`
-* `CommonModule`
 
 Each module includes:
 
 * `controller` → handles HTTP requests
 * `service` → contains business logic
-* `repository` → manages database operations
 * `dto` → defines validation rules
 * `schema` → defines MongoDB models
 
@@ -201,8 +197,19 @@ A RESTful approach is used with predictable and resource-oriented endpoints.
 
 * GET /transactions
 * POST /transactions
-* PATCH /transactions/:id
 * PATCH /transactions/:id/stage
+
+### Agents
+
+* GET /agents
+* POST /agents
+* DELETE /agents/:id
+
+### Properties
+
+* GET /properties
+* POST /properties
+* DELETE /properties/:id
 
 ### Design Decision
 
@@ -215,6 +222,8 @@ Separating the stage endpoint allows:
 ---
 
 ## 9. Frontend Architecture & UI Decisions
+
+This section describes the frontend integration expected by the backend contract. The frontend implementation itself is outside this repository.
 
 ### Page Structure
 
@@ -255,12 +264,13 @@ When a user triggers an action:
 
 Pinia is used for centralized state management.
 
+For this backend repository, this section documents the intended state shape and API interaction model expected by the frontend.
+
 ### Responsibilities
 
 * Store agents, properties, and transactions
 * Manage API interactions
 * Handle stage updates
-* Provide fallback data during development
 
 This reduces duplication and keeps data flow consistent across the app.
 

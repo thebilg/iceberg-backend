@@ -41,18 +41,15 @@ Built with a strong focus on clean architecture, business rule centralization, a
 ```txt
 src/
   modules/
-    agents/
-    properties/
-    transactions/
-    reports/
-  common/
+    agent/
+    property/
+    transaction/
 ```
 
 Each module includes:
 
 * controller (HTTP layer)
 * service (business logic)
-* repository (data access)
 * dto (validation)
 * schema (MongoDB models)
 
@@ -92,26 +89,20 @@ Commission is calculated only when a transaction reaches `completed`.
 
 * GET /agents
 * POST /agents
-* PATCH /agents/:id
 * DELETE /agents/:id
 
 ### Properties
 
 * GET /properties
 * POST /properties
-* PATCH /properties/:id
+* DELETE /properties/:id
 
 ### Transactions
 
 * GET /transactions
 * POST /transactions
-* PATCH /transactions/:id
 * PATCH /transactions/:id/stage
-
-### Reports
-
-* GET /reports/overview
-* GET /reports/commissions
+* DELETE /transactions/:id
 
 ---
 
@@ -120,6 +111,27 @@ Commission is calculated only when a transaction reaches `completed`.
 * DTO + Validation Pipe
 * Whitelist enabled
 * Standard error response format
+
+---
+
+## Environment Variables
+
+Required for backend runtime:
+
+* `MONGO_URI` - MongoDB Atlas connection string
+
+Optional:
+
+* `PORT` - server port, defaults to `8080`
+* `FRONTEND_URL` - frontend origin used during deployment coordination
+
+Example local setup:
+
+```bash
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<database>
+PORT=8080
+FRONTEND_URL=http://localhost:3000
+```
 
 ---
 
@@ -166,7 +178,7 @@ npm test
 
 ## Design Document
 
-For full system architecture and design decisions:
+For backend architecture, data model decisions, and frontend integration notes:
 
 👉 See DESIGN.md
 
