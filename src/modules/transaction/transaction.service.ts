@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Transaction, TransactionDocument } from './transaction.schema';
 import { AgentService } from '../agent/agent.service';
 import { PropertyService } from '../property/property.service';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
 
 @Injectable()
 export class TransactionService {
@@ -119,7 +120,7 @@ export class TransactionService {
   }
 
   // ➕ TRANSACTION OLUŞTUR
-  async create(data: any) {
+  async create(data: CreateTransactionDto) {
     this.assertValidObjectId(data.propertyId, 'propertyId');
     this.assertValidObjectId(data.listingAgentId, 'listingAgentId');
     this.assertValidObjectId(data.sellingAgentId, 'sellingAgentId');

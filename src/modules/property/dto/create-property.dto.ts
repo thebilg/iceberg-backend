@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString, IsNumber, IsMongoId } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsString, IsNumber, IsMongoId, Min } from 'class-validator';
 
 export class CreatePropertyDto {
   @IsNotEmpty()
@@ -6,7 +7,9 @@ export class CreatePropertyDto {
   title!: string;
 
   @IsNotEmpty()
+  @Type(() => Number)
   @IsNumber()
+  @Min(0)
   price!: number;
 
   @IsNotEmpty()

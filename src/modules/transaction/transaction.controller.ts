@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { UpdateTransactionStageDto } from './dto/update-transaction-stage.dto';
 
 @Controller(['transactions', 'transaction', 'api/transactions', 'api/transaction'])
 export class TransactionController {
@@ -7,7 +9,7 @@ export class TransactionController {
 
   // ➕ TRANSACTION OLUŞTUR
   @Post()
-  create(@Body() body: any) {
+  create(@Body() body: CreateTransactionDto) {
     return this.service.create(body);
   }
 
@@ -27,7 +29,7 @@ export class TransactionController {
   @Patch(':id/stage')
   updateStage(
     @Param('id') id: string,
-    @Body() body: { stage?: string; nextStage?: string; status?: string },
+    @Body() body: UpdateTransactionStageDto,
   ) {
     return this.service.updateStage(
       id,
